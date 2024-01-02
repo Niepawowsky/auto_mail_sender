@@ -33,14 +33,11 @@ class DbManager:
 
 class DataBaseService():
 
-    # connection = sqlite3.connect('database/sample_books.db')
-
     def __init__(self, connection):
         self.connection = connection
 
     def create_database(self, connection):
         with DbManager(connection) as database:
-            print("CREATING TABLE IF NOT EXISTS")
             database.cursor.execute('''CREATE TABLE IF NOT EXISTS borrowed_books(
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     email TEXT,
@@ -78,7 +75,7 @@ class DataBaseService():
 
             return borrower_list
 
-    def get_borrowed_for_remider(self):
+    def get_borrowed_history(self):
         """
         The get_borrowed_for_remider function returns a list of
         namedtuples containing the name, email, title and return_at
@@ -88,7 +85,7 @@ class DataBaseService():
         :param self: Represent the instance of the class
         :return: A list of named tuples
         """
-        today = datetime.today()
+        # today = datetime.today()
         borrower = namedtuple('Borrower', 'name email title return_at')
         borrower_list = []
         with DbManager(connection=self.connection) as database:
