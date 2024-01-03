@@ -67,7 +67,7 @@ class DataBaseService():
                 title, 
                 return_at 
             FROM borrowed_books
-            WHERE return_at < ?''', (today,))
+            WHERE return_at > ?''', (today,))
 
             for name, email, title, return_at in database.cursor.fetchall():
                 return_date = datetime.strptime(return_at, '%Y-%m-%d %H:%M:%S')
