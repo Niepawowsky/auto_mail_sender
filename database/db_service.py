@@ -36,8 +36,11 @@ class DataBaseService():
     def __init__(self, connection):
         self.connection = connection
 
-    def create_database(self, connection):
-        with DbManager(connection) as database:
+
+    def create_connection(self):
+        pass
+    def create_database(self):
+        with DbManager(self.connection) as database:
             database.cursor.execute('''CREATE TABLE IF NOT EXISTS borrowed_books(
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     email TEXT,
@@ -46,6 +49,16 @@ class DataBaseService():
                     author TEXT NOT NULL,
                     return_at DATE)'''
                                     )
+    def _execute_query(self, query, params):
+
+        with DbManager(connection=self.connection) as database:
+            cursor = database.cursor
+            if params:
+                cursor.execute(query, params)
+            else:
+                cursor.execute(query)
+
+        return cursor.fetchall()
 
     def get_borrowed_books_by_today(self):
 
@@ -60,20 +73,22 @@ class DataBaseService():
         today = datetime.today()
         borrower = namedtuple('Borrower', 'name email title return_at')
         borrower_list = []
-        with DbManager(connection=self.connection) as database:
-            database.cursor.execute('''SELECT 
+        query = '''SELECT 
                 name, 
                 email, 
                 title, 
                 return_at 
             FROM borrowed_books
-            WHERE return_at > ?''', (today,))
+            WHERE return_at > ?'''
 
-            for name, email, title, return_at in database.cursor.fetchall():
-                return_date = datetime.strptime(return_at, '%Y-%m-%d %H:%M:%S')
-                borrower_list.append(borrower(name, email, title, return_date))
+        result = self._execute_query(query, (today,))
 
-            return borrower_list
+        for name, email, title, return_at in result:
+            return_date = datetime.strptime(return_at, '%Y-%m-%d %H:%M:%S')
+            return_date.strftime('%Y-%m-%d')
+            borrower_list.append(borrower(name, email, title, return_date))
+
+        return borrower_list
 
     def get_borrowed_history(self):
         """
@@ -88,17 +103,23 @@ class DataBaseService():
         # today = datetime.today()
         borrower = namedtuple('Borrower', 'name email title return_at')
         borrower_list = []
-        with DbManager(connection=self.connection) as database:
-            database.cursor.execute('''SELECT 
+        query = '''SELECT 
                 name, 
                 email, 
                 title, 
                 return_at 
-            FROM borrowed_books''')
+            FROM borrowed_books'''
 
-            for name, email, title, return_at in database.cursor.fetchall():
-                return_date = datetime.strptime(return_at, '%Y-%m-%d %H:%M:%S')
-                print(return_date)
-                borrower_list.append(borrower(name, email, title, return_date))
+        result = self._execute_query(query, None)
 
-            return borrower_list
+        for name, email, title, return_at in result:
+            return_date = datetime.strptime(return_at, '%Y-%m-%d %H:%M:%S')
+            return_date.strftime('%Y-%m-%d')
+            borrower_list.append(borrower(name, email, title, return_date))
+
+        return borrower_list
+
+
+    def add_record(self):
+        pass
+
