@@ -8,27 +8,6 @@ from templates.template_render import EmailTemplates
 
 
 class MailSender():
-    @staticmethod
-    # def send_data(func):
-    #     def wrapper(*args, **kwargs):
-    #         smtp_server = getenv('SMTP_SERVER')
-    #         port = 465#('PORT')
-    #         sender_email = getenv('EMAIL')
-    #         password = getenv('PASSWORD')
-    #
-    #         context = ssl.create_default_context()
-    #
-    #         result = func(*args,
-    #                       smtp_server=smtp_server,
-    #                       port=port,
-    #                       sender_email=sender_email,
-    #                       password=password,
-    #                       context=context
-    #                       )
-    #
-    #         return result
-    #
-    #     return wrapper
 
     @staticmethod
     def send_data(func):
@@ -38,20 +17,7 @@ class MailSender():
             port = 465  # or int(getenv('PORT'))
             sender_email = getenv('EMAIL')
             password = getenv('PASSWORD')
-
             context = ssl.create_default_context()
-
-            # # If the wrapped function already has these arguments, use them
-            # if 'smtp_server' in kwargs:
-            #     smtp_server = kwargs['smtp_server']
-            # if 'port' in kwargs:
-            #     port = kwargs['port']
-            # if 'sender_email' in kwargs:
-            #     sender_email = kwargs['sender_email']
-            # if 'password' in kwargs:
-            #     password = kwargs['password']
-            # if 'context' in kwargs:
-            #     context = kwargs['context']
 
             kwargs.update({
                 'smtp_server': smtp_server,
@@ -76,6 +42,9 @@ class MailSender():
     @send_data
     def send_passed_return_date(self, *args, **kwargs):  # smtp_server, port, sender_email, password, context):
         print('Before connected to SMTP server')
+        sender = kwargs['sender_email']
+        password = kwargs['password']
+
         try:
             print('connected to SMTP server')
             #
@@ -84,15 +53,18 @@ class MailSender():
                     today = datetime.datetime.today()
                     today.strftime('%Y-%m-%d')
                     result = borrower.return_at - today
+                    result = str(result.days)
                     print(type(borrower.return_at))
-                    mail = self.template.send_reminder_nearby().substitute(name=borrower.name, title=borrower.title,
-                                                                         return_at=borrower.return_at, result=str(result))
+                    # mail = self.template.send_reminder_overdue().
+                    mail = self.template.send_reminder_overdue().substitute(sender_mail=sender,name=borrower.name, title=borrower.title,
+                                                                         return_at=borrower.return_at, borrower_email=borrower.email, result=result)
                     #@TODO wysyla pustego maila
                     print('To jest mail:', mail)
                     print('Iterating threw self.borrowers')
-                    server.login(kwargs['sender_email'], kwargs['password'])
+                    server.login(sender, password)
                     print('logged in')
-                    server.sendmail(kwargs['sender_email'], borrower.email, mail)
+                    server.sendmail(from_addr=sender, to_addrs=borrower.email, msg=mail)
+                    print('email sent')
 
         except Exception as e:
             print(f'Error: {e}')
