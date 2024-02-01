@@ -49,7 +49,7 @@ class DataBaseService():
                     author TEXT NOT NULL,
                     return_at DATE)'''
                                     )
-    def _execute_query(self, query, params):
+    def execute_query(self, query, params):
 
         with DbManager(connection=self.connection) as database:
             cursor = database.cursor
@@ -81,7 +81,7 @@ class DataBaseService():
             FROM borrowed_books
             WHERE return_at > ?'''
 
-        result = self._execute_query(query, (today,))
+        result = self.execute_query(query, (today,))
 
         for name, email, title, return_at in result:
             return_date = datetime.strptime(return_at, '%Y-%m-%d %H:%M:%S')
@@ -90,7 +90,7 @@ class DataBaseService():
 
         return borrower_list
 
-    def get_borrowed_history(self):
+    def get_borrowed_passed(self):
         """
         The get_borrowed_for_remider function returns a list of
         namedtuples containing the name, email, title and return_at
@@ -100,7 +100,7 @@ class DataBaseService():
         :param self: Represent the instance of the class
         :return: A list of named tuples
         """
-        # today = datetime.today()
+        today = datetime.today()
         borrower = namedtuple('Borrower', 'name email title return_at')
         borrower_list = []
         query = '''SELECT 
@@ -108,9 +108,10 @@ class DataBaseService():
                 email, 
                 title, 
                 return_at 
-            FROM borrowed_books'''
+            FROM borrowed_books
+            WHERE return_at < ?'''
 
-        result = self._execute_query(query, None)
+        result = self.execute_query(query, (today,))
 
         for name, email, title, return_at in result:
             return_date = datetime.strptime(return_at, '%Y-%m-%d %H:%M:%S')
@@ -118,8 +119,3 @@ class DataBaseService():
             borrower_list.append(borrower(name, email, title, return_date))
 
         return borrower_list
-
-
-    def add_record(self):
-        pass
-
